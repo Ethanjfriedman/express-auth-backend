@@ -1,17 +1,16 @@
 import { Router } from 'express';
 import db from '../db/db.js';
 import { ObjectID } from 'mongodb';
-
+import Teacher from '../db/models/Teacher.js';
 export default function(){
   const teachers = Router();
-  const collection = db.get().collection('teachers');
-
+  const teachersCollection = db.get().model('teacher',Teacher);
+  console.log('tc:',teachersCollection);
   teachers.get('/', (req, res) => {
-    // //we finally hit the database!
-    // collection.find().toArray((err, docs) => {
-    //   res.json({ tacos : docs });
-    // });
-    res.json({ teachers: true });
+    teachersCollection.find().toArray((err, docs) => {
+      res.json({ teachers : docs });
+    });
+    // res.json({ teachers: true });
   });
 
   teachers.get('/taco', (req, res) => {
