@@ -2,6 +2,8 @@ import { Router } from 'express';
 import db from '../db/db.js';
 import { ObjectID } from 'mongodb';
 import Teacher from '../db/models/Teacher.js';
+import passport from 'passport';
+import { Strategy } from 'passport-local';
 
 export default function(){
   const router = Router();
@@ -36,17 +38,16 @@ export default function(){
   });
 
   //get teacher by username
-  router.get('/name/:name', (req, res) => {
-    teachersCollection.findOne({'username': req.params.name}, (err, teacher) => {
+  router.findOne = function(username, done) {
+    teachersCollection.findOne({'username': username}, (err, teacher) => {
       if (err) {
         console.log(`error finding teacher by that username in db: ${err}`);
-        res.json({success: false, error: err, teacher: null});
-      } else if (teacher === null) {
-        res.json({success: false, error: 'no teacher by that name', teacher});
-      } else {
-        res.json({success: true, error: null, teacher});
+        return done(err, null);
       }
+      return done(null, teacher);
     });
-  });
+  };
+
+
   return router;
 };
