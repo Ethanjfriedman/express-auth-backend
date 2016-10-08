@@ -34,6 +34,8 @@ db.connect(mongoURI, (err) => {
       res.json({
         app:'express authentication backend',
         version:'1.0',
+        author: 'Ethan Friedman',
+        email: 'ethanjfriedman@gmail.com',
         success: true
       });
     });

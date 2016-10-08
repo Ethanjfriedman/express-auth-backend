@@ -2,44 +2,51 @@ import { Router } from 'express';
 import db from '../db/db.js';
 import { ObjectID } from 'mongodb';
 import Teacher from '../db/models/Teacher.js';
+
 export default function(){
-  const teachers = Router();
+  const router = Router();
   const teachersCollection = db.get().model('teacher',Teacher);
-  console.log('tc:',teachersCollection);
-  teachers.get('/', (req, res) => {
-    teachersCollection.find().toArray((err, docs) => {
-      res.json({ teachers : docs });
-    });
-    // res.json({ teachers: true });
-  });
 
-  teachers.get('/taco', (req, res) => {
-    collection.findOne({"_id": ObjectID(req.body._id)},(err, collection) => {
-      res.json(collection)
-    });
-  });
-
-  teachers.post('/taco', (req, res) => {
-    // create a new taco
-    collection.insert(req.body, (err, result) => {
-      res.json(result);
+  // get all teachers
+  router.get('/', (req, res) => {
+    teachersCollection.find((err, teachers) => {
+      if (err) {
+        console.error.bind(console, `Error finding teachers in db: ${err}`);
+        res.json({success: false, error: err, teachers: null});
+      } else if (teachers === null) {
+        res.json({success: true, error: 'no teachers in db', teachers: null})
+      } else {
+        res.json({ success: true, error: null, teachers });
+      }
     });
   });
 
-  teachers.put('/taco', (req, res) => {
-    // edit a taco
-    collection.update({"_id": ObjectID(req.body._id)}, {"name": req.body.name, "toppings": req.body.toppings}, {w:1} , (err, result) => {
-      res.json(result);
+  //get teacher by id
+  router.get('/:_id', (req, res) => {
+    teachersCollection.findOne({"_id": ObjectID(req.params._id)},(err, teacher) => {
+      if (err) {
+        console.error.bind(console, `error finding teacher w/ that id in db: ${err}`);
+        res.json({success: false, error: err, teacher: null});
+      } else if (teacher === null) {
+        res.json({success: false, error: 'no teacher with that id', teacher});
+      } else {
+        res.json({success: true, error: null, teacher});
+      }
     });
-
   });
 
-  teachers.delete('/taco', (req, res) => {
-    // delete a whole damn taco
-    collection.remove({"_id": ObjectID(req.body._id)},(err, result) => {
-      res.json(result);
+  //get teacher by username
+  router.get('/name/:name', (req, res) => {
+    teachersCollection.findOne({'username': req.params.name}, (err, teacher) => {
+      if (err) {
+        console.log(`error finding teacher by that username in db: ${err}`);
+        res.json({success: false, error: err, teacher: null});
+      } else if (teacher === null) {
+        res.json({success: false, error: 'no teacher by that name', teacher});
+      } else {
+        res.json({success: true, error: null, teacher});
+      }
     });
   });
-
-  return teachers;
+  return router;
 };
