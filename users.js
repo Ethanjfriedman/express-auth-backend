@@ -1,6 +1,4 @@
 import { Router } from 'express';
-// import bodyParser from 'body-parser';
-// import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import User from './app/models/user';
 import config from './config';

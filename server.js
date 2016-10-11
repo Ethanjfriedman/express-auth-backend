@@ -1,9 +1,7 @@
 import express from 'express';
-import jwt from 'jsonwebtoken';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import config from './config';
-import User from './app/models/user';
 import usersController from './users'
 
 // CONFIG //
@@ -50,4 +48,4 @@ mongoose.connect(dbURI, err => {
       }
     });
   }
-}); // TODO move app.listen into callback here
+});
