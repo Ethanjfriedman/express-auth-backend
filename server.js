@@ -12,10 +12,13 @@ const PORT = process.env.PORT || 3333;
 const app = express();
 const secret = config.secret || process.env.REACT_AUTH_SECRET;
 const dbURI = process.env.MONGODB_URI || config.database;
+const environment = process.env.REACT_AUTH_ENV || "development";
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
-app.use(morgan('dev'));
+if (environment === "development") {
+  app.use(morgan('dev'));
+}
 app.set('superSecret', secret);
 
 // root route
