@@ -103,6 +103,7 @@ usersController.use((req, res, next) => {
   }
 });
 
+// TODO should only be available for admin users
 usersController.get('/all', (req, res) => {
   User.find({}, (error, users) => {
     if (error) {
@@ -113,5 +114,13 @@ usersController.get('/all', (req, res) => {
     }
   });
 });
+
+usersController.get('/cleo', (req, res) => {
+  res.json({sucess: true, message: 'you should not be able to see this unless you passed a valid token to the backend.'})
+});
+//TODO
+// delete route (admin OR that user only) to delete a user
+// (DELETE to /users/delete ? how RESTful do I feel like being)
+// edit route to edit a user (PUT to /users/edit)
 
 export default usersController;
