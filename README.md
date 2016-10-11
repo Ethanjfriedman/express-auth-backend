@@ -19,7 +19,8 @@ POST '/users/new': creates a new user. Expects the body of the request to contai
   - password (string)
   - isTeacher (boolean)
   - isAdmin (boolean)
-  On successful user creation, returns a JSON web token that can be used by the frontend when making future requests that require authentication.
+
+  On successful user creation, returns a JSON web token that can be used by the frontend when making future requests that require  authentication.
 
 POST '/users/login': logs in an existing user
 
