@@ -1,5 +1,4 @@
 import express from 'express';
-import morgan from 'morgan';
 import jwt from 'jsonwebtoken';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
@@ -17,6 +16,7 @@ const environment = process.env.REACT_AUTH_ENV || "development";
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 if (environment === "development") {
+  import morgan from 'morgan';
   app.use(morgan('dev'));
 }
 app.set('superSecret', secret);
