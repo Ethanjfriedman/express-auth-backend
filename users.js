@@ -1,11 +1,11 @@
 import { Router } from 'express';
 // import bodyParser from 'body-parser';
-import mongoose from 'mongoose';
+// import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import User from './app/models/user';
 import config from './config';
 import bcrypt from 'bcrypt';
-
+const secret = config.secret || process.env.REACT_AUTH_SECRET;
 const usersController = Router();
 
 // for testing
@@ -45,7 +45,7 @@ usersController.post('/new', (req, res) => {
                   res.json({success: false, token: null, error: 'server error'});
                 } else {
                   // generate token for newly created user
-                  const token = jwt.sign(newUser, config.secret, {
+                  const token = jwt.sign(newUser, secret, {
                     expiresIn: 1440 // 24 hours (in minutes)
                   });
                   res.json({success: true, error: null, token});
@@ -74,7 +74,7 @@ usersController.post('/login', (req, res) => {
     if (user.password !== req.body.password ) {
         res.json({ success: false, error: 'Authentication failed. Wrong password.' });
     } else {
-      const token = jwt.sign(user, config.secret, {
+      const token = jwt.sign(user, secret, {
         expiresIn: 1440 // 24 hours (in minutes)
       });
       res.json({success: true, error: null, token});
@@ -86,7 +86,7 @@ usersController.use((req, res, next) => {
   const token = req.body.token || req.query.token || req.headers['x-access-token'];
 
   if (token) {
-    jwt.verify(token, config.secret, (err, confirmation) => {
+    jwt.verify(token, secret, (err, confirmation) => {
       if (err) {
         res.json({ success: false, error: 'Failed to authenticate token.' });
       } else {

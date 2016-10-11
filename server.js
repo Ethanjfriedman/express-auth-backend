@@ -10,11 +10,13 @@ import usersController from './users'
 // CONFIG //
 const PORT = process.env.PORT || 3333;
 const app = express();
+const secret = config.secret || process.env.REACT_AUTH_SECRET;
+const dbURI = process.env.MONGODB_URI || config.database;
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 app.use(morgan('dev'));
-app.set('superSecret', config.secret);
+app.set('superSecret', secret);
 
 // root route
 app.get('/', (req, res) => {
@@ -31,11 +33,11 @@ app.get('/', (req, res) => {
 app.use('/users', usersController);
 
 // start app
-mongoose.connect(config.database, err => {
+mongoose.connect(dbURI, err => {
   if (err) {
-    console.error.bind(console, `error connecting to mongoose at ${config.database}: ${err}`);
+    console.error.bind(console, `error connecting to mongoose at ${dbURI}: ${err}`);
   } else {
-    console.log(`Connected to MongoDB at ${config.database}!`);
+    console.log(`Connected to MongoDB at ${dbURI}!`);
     app.listen(PORT, error => {
       if (error) {
         console.error.bind(console, `error starting app listening on port ${PORT}: ${error}`);
@@ -46,12 +48,3 @@ mongoose.connect(config.database, err => {
     });
   }
 }); // TODO move app.listen into callback here
-
-// app.listen(PORT, err => {
-//   if (err) {
-//     console.error.bind(console, `error starting app listening on port ${PORT}`);
-//     process.exit(1);
-//   } else {
-//     console.log(`Server is up and running on port ${PORT}!`);
-//   }
-// });
