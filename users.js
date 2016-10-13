@@ -69,8 +69,10 @@ usersController.post('/login', (req, res) => {
       res.json({ success: false, error: 'Authentication failed. User not found.', token: null});
     }
 
-    if (user.password !== req.body.password ) {
+    if (!user.password) {
         res.json({ success: false, error: 'Authentication failed. Wrong password.' });
+    } else if (user.password !== req.body.password) {
+      res.json({success: false, error: 'No password provided.'});
     } else {
       const token = jwt.sign(user, secret, {
         expiresIn: 1440 // 24 hours (in minutes)

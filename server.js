@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import config from './config';
 import usersController from './users'
+import cors from 'cors';
 
 // CONFIG //
 const PORT = process.env.PORT || 3333;
@@ -11,7 +12,8 @@ const secret = config.secret || process.env.REACT_AUTH_SECRET;
 const dbURI = process.env.MONGODB_URI || config.database;
 const environment = process.env.REACT_AUTH_ENV || "development";
 
-app.use(bodyParser.urlencoded({extended: false}));
+app.use(cors());
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 if (environment === "development") {
   const morgan = require('morgan');
