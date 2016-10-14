@@ -58,28 +58,63 @@ usersController.post('/new', (req, res) => {
 }); //end route
 
 usersController.post('/login', (req, res) => {
-  User.findOne({
-    username: req.body.username
-  }, (error, user) => {
-    if (error) {
-      res.json({success: false, token: null, error: `Error finding user in db: ${error}`})
-    }
-
-    if (!user) {
-      res.json({ success: false, error: 'Authentication failed. User not found.', token: null});
-    }
-
-    if (!user.password) {
-        res.json({ success: false, error: 'Authentication failed. Wrong password.' });
-    } else if (user.password !== req.body.password) {
-      res.json({success: false, error: 'No password provided.'});
-    } else {
-      const token = jwt.sign(user, secret, {
-        expiresIn: 1440 // 24 hours (in minutes)
-      });
-      res.json({success: true, error: null, token});
-    }
-  });
+  const username = req.body.username;
+  const pw = req.body.password
+  if (!username || !pw) {
+    res.json({
+      success: false,
+      token: null,
+      error: "No username and/or password provided."
+    });
+  } else {
+    User.findOne({
+      username: username
+    }, (userFindError, user) => {
+      if (userFindError) {
+        console.error.bind(`Error finding user in db: ${userFindError}`);
+        res.json({ success: false,
+                   token: null,
+                   error: `Error finding user in database.`
+                 });
+      } else if (!user) {
+        res.json({ success: false,
+                   error: 'Authentication failed. User not found.', token: null
+                 });
+      } else if (!pw) {
+        res.json({ success: false,
+                   token: null,
+                   error: 'No password provided.'
+                 });
+      } else {
+        bcrypt.compare(pw, user.password, (compareError, result) => {
+          if (compareError) {
+            console.error.bind(console, `error comparing passwords with bcrypt: ${compareError}`);
+            res.json({ success: false,
+                       token: null,
+                       error: "Password error."
+                     });
+          } else {
+            if (result) {
+              const token = jwt.sign(user, secret, {
+                expiresIn: 1440 // 24 hours (in minutes)
+              });
+              res.json({
+                success: true,
+                error: null,
+                token
+              });
+            } else {
+              res.json({
+                success: false,
+                error: "Wrong password entered.",
+                token: null
+              });
+            }
+          }
+        });
+      }
+    });
+  }
 });
 
 usersController.use((req, res, next) => {
