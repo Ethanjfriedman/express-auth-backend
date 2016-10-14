@@ -46,7 +46,6 @@ usersController.post('/new', (req, res) => {
                   const token = jwt.sign(newUser, secret, {
                     expiresIn: 1440 // 24 hours (in minutes)
                   });
-                  console.log('token',token);
                   res.json({success: true, error: null, token});
                 }
               }); // end User.save
