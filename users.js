@@ -231,16 +231,18 @@ usersController.put('/:id', (req, res) => {
 // delete user
 usersController.delete('/:id', (req, res) => {
     const username = req.params.id;
-    User.findOne({ username }, (dbErr, user) => {
+    User.findOneAndRemove({ username }, (dbErr, result) => {
       if (dbErr) {
         console.error.bind(console, `error looking user up in db: ${dbErr}`);
         res.json({
           success: false,
-          error: "Database error",
-          user: null
+          error: "Database error"
         });
       } else {
-
+        res.json({
+          success: true,
+          error: null
+        });
       }
     });
 });
