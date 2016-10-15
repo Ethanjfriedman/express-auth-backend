@@ -2,7 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import config from './config';
-import usersController from './users'
+import usersController from './app/controllers/users'
 import cors from 'cors';
 
 // CONFIG //

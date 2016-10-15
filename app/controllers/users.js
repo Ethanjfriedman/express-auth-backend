@@ -1,11 +1,23 @@
+/*
+TODO
+
+This is NOT DRY code. But it works. Things to do:
+--move various pieces of functionality to their own functions to dry up the code. e.g.:
+  * hashing pws
+  * error handling
+  * saving user
+
+-- move admin routes to their own router file
+
+*/
+
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
-import User from './app/models/user';
-import config from './config';
+import User from '../models/user';
+import config from '../../config';
 import bcrypt from 'bcrypt';
 const secret = config.secret || process.env.REACT_AUTH_SECRET;
 const usersController = Router();
-import { hashPW } from './bcrypt.js'; // TODO use this fxn in the create new user route.
 
 // for testing
 usersController.get('/', (req, res) => {
@@ -202,28 +214,58 @@ usersController.put('/:id', (req, res) => {
       } else {
         const oldUser = Object.assign({}, user);
         user.username = req.body.username || user.username;
-        user.password = req.body.password ? hashPW(req.body.password) : user.password;
         user.teacher = req.body.isTeacher || user.teacher;
         // only way to change admin status should be manually on the db:
-        // const newAdminStatus = req.body.isAdmin : user.admin;
         user.admin = user.admin;
-
-        user.save((saveErr, result) => {
-          if (saveErr) {
-            console.error.bind(console, `error saving to db: ${saveErr}`);
-            res.json({
-              success: false,
-              error: saveErr,
-              user: oldUser
-            });
-          } else {
-            res.json({
-              success: true,
-              error: null,
-              user: result
-            });
-          }
-        });
+        console.log(`uid: ${user.username}, pw: ${user.password}`);
+        if (req.body.password) {
+          bcrypt.genSalt(10, (saltErr, salt) => {
+            if (saltErr) {
+              console.error.bind(console, `error generating salt: ${saltErr}`);
+              res.json({success: false, error: saltErr});
+            } else {
+              bcrypt.hash(req.body.password, salt, (hashErr, hash) => {
+                if (hashErr) {
+                  console.error.bind(console, `error hashing plaintext: ${hashErr}`);
+                  res.json({ success: false, error: hashErr });
+                } else {
+                  user.save((saveErr, result) => {
+                    if (saveErr) {
+                      console.error.bind(console, `error saving to db: ${saveErr}`);
+                      res.json({
+                        success: false,
+                        error: saveErr,
+                        user: oldUser
+                      });
+                    } else {
+                      res.json({
+                        success: true,
+                        error: null,
+                        user: result
+                      });
+                    }
+                  });
+                }
+              });
+            }
+          });
+        } else {
+          user.save((saveErr, result) => {
+            if (saveErr) {
+              console.error.bind(console, `error saving to db: ${saveErr}`);
+              res.json({
+                success: false,
+                error: saveErr,
+                user: oldUser
+              });
+            } else {
+              res.json({
+                success: true,
+                error: null,
+                user: result
+              });
+            }
+          });        }
       }
     });
 });
