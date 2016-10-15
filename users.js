@@ -5,6 +5,7 @@ import config from './config';
 import bcrypt from 'bcrypt';
 const secret = config.secret || process.env.REACT_AUTH_SECRET;
 const usersController = Router();
+import { hashPW } from './bcrypt.js'; // TODO use this fxn in the create new user route.
 
 // for testing
 usersController.get('/', (req, res) => {
@@ -48,15 +49,16 @@ usersController.post('/new', (req, res) => {
                   });
                   res.json({success: true, error: null, token});
                 }
-              }); // end User.save
+              });
             }
-          }); // end bcrypt.hash
+          });
         }
-      }); // end bcrypt.genSalt
+      });
     }
-  }); // end User.findOne
-}); //end route
+  });
+});
 
+// login in as existing user
 usersController.post('/login', (req, res) => {
   const username = req.body.username;
   const pw = req.body.password
@@ -117,6 +119,7 @@ usersController.post('/login', (req, res) => {
   }
 });
 
+// MIDDLEWARE TO CHECK FOR VALID AUTHENTICATION ON ALL OTHER ROUTES
 usersController.use((req, res, next) => {
   const token = req.body.token || req.query.token || req.headers['x-access-token'];
 
@@ -126,10 +129,12 @@ usersController.use((req, res, next) => {
         res.json({ success: false, error: 'Failed to authenticate token.' });
       } else {
         req.confirmation = confirmation;
+        req.username = confirmation._doc.username;
+        req.isAdmin = confirmation._doc.admin;
+        req.isTeacher = confirmation._doc.teacher;
         next();
       }
     });
-
   } else {
     res.status(403).send({
       success: false,
@@ -138,21 +143,108 @@ usersController.use((req, res, next) => {
   }
 });
 
-// TODO should only be available for admin users
-usersController.get('/all', (req, res) => {
-  User.find({}, (error, users) => {
-    if (error) {
-      console.error.bind(console, `Error finding users in db: ${error}`);
-      res.json({success: false, error, users: null});
-    } else {
-      res.json({success: true, error: null, users});
-    }
-  });
+usersController.get('/cleo', (req, res) => {
+  res.json({sucess: true, message: 'you should not be able to see this unless you passed a valid token to the backend. Also Cleo is the BEST DOG.'});
 });
 
-usersController.get('/cleo', (req, res) => {
-  res.json({sucess: true, message: 'you should not be able to see this unless you passed a valid token to the backend.'})
+// middleware to require administrator privileges for all routes below this
+usersController.use((req, res, next) => {
+  if (req.isAdmin) {
+    next();
+  } else {
+    res.status(401).json({
+      success: false,
+      error: 'Admin privileges required.'
+    });
+  }
 });
+
+// view all users
+usersController.get('/all', (req, res) => {
+    User.find({}, (error, users) => {
+      if (error) {
+        console.error.bind(console, `Error finding users in db: ${error}`);
+        res.json({success: false, error, users: null});
+      } else {
+        res.json({success: true, error: null, users});
+      }
+    });
+});
+
+// view one user
+usersController.get('/:id', (req, res) => {
+    const username = req.params.id;
+    User.findOne({ username }, (dbErr, user) => {
+      if (dbErr) {
+        console.error.bind(console, `error looking user up in db: ${dbErr}`);
+        res.json({
+          success: false,
+          error: "Database error",
+          user: null
+        });
+      } else {
+        res.json({ success: true, error: null, user});
+      }
+    });
+});
+
+// update user
+usersController.put('/:id', (req, res) => {
+    const username = req.params.id;
+    User.findOne({ username }, (dbErr, user) => {
+      if (dbErr) {
+        console.error.bind(console, `error looking user up in db: ${dbErr}`);
+        res.json({
+          success: false,
+          error: "Database error",
+          user: null
+        });
+      } else {
+        const oldUser = Object.assign({}, user);
+        user.username = req.body.username || user.username;
+        user.password = req.body.password ? hashPW(req.body.password) : user.password;
+        user.teacher = req.body.isTeacher || user.teacher;
+        // only way to change admin status should be manually on the db:
+        // const newAdminStatus = req.body.isAdmin : user.admin;
+        user.admin = user.admin;
+
+        user.save((saveErr, result) => {
+          if (saveErr) {
+            console.error.bind(console, `error saving to db: ${saveErr}`);
+            res.json({
+              success: false,
+              error: saveErr,
+              user: oldUser
+            });
+          } else {
+            res.json({
+              success: true,
+              error: null,
+              user: result
+            });
+          }
+        });
+      }
+    });
+});
+
+// delete user
+usersController.delete('/:id', (req, res) => {
+    const username = req.params.id;
+    User.findOne({ username }, (dbErr, user) => {
+      if (dbErr) {
+        console.error.bind(console, `error looking user up in db: ${dbErr}`);
+        res.json({
+          success: false,
+          error: "Database error",
+          user: null
+        });
+      } else {
+
+      }
+    });
+});
+
 //TODO
 // delete route (admin OR that user only) to delete a user
 // (DELETE to /users/delete ? how RESTful do I feel like being)
