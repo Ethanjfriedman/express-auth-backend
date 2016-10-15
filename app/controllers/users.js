@@ -201,23 +201,24 @@ usersController.get('/:id', (req, res) => {
 });
 
 // update user
-usersController.put('/:id', (req, res) => {
-    const username = req.params.id;
+usersController.put('/update', (req, res) => {
+    const username = req.body.username;
     User.findOne({ username }, (dbErr, user) => {
-      if (dbErr) {
+      if (dbErr || !user) {
         console.error.bind(console, `error looking user up in db: ${dbErr}`);
         res.json({
           success: false,
-          error: "Database error",
+          error: dbErr,
           user: null
         });
       } else {
+        console.log(user);
         const oldUser = Object.assign({}, user);
-        user.username = req.body.username || user.username;
+        user.username = req.body.newUsername || user.username;
+        // TODO: look up the new requested username in the db and return an error if it is the same as an existing username
         user.teacher = req.body.isTeacher || user.teacher;
         // only way to change admin status should be manually on the db:
         user.admin = user.admin;
-        console.log(`uid: ${user.username}, pw: ${user.password}`);
         if (req.body.password) {
           bcrypt.genSalt(10, (saltErr, salt) => {
             if (saltErr) {
@@ -229,6 +230,7 @@ usersController.put('/:id', (req, res) => {
                   console.error.bind(console, `error hashing plaintext: ${hashErr}`);
                   res.json({ success: false, error: hashErr });
                 } else {
+                  user.password = hash;
                   user.save((saveErr, result) => {
                     if (saveErr) {
                       console.error.bind(console, `error saving to db: ${saveErr}`);
